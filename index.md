@@ -1,7 +1,1 @@
-Hello and welcome to this blog. Edit the `index.md` file to change this content. All pages on the blog, including this one, use [Markdown](https://guides.github.com/features/mastering-markdown/). You can include images:
-
-![Image of fast.ai logo](images/logo.png)
-
-## This is a title
-
-And you can include links, like this [link to fast.ai](https://www.fast.ai). Posts will appear after this file. 
+Hello and welcome to my blog. Its been written entirely using [Markdown](https://guides.github.com/features/mastering-markdown/). If you want to make such a blog of your own, make sure to check out an awesome [Jeremy Howard's](https://en.wikipedia.org/wiki/Jeremy_Howard_(entrepreneur)) article and a [GitHub pages template](https://github.com/fastai/fast_template). Don't worry, it is entirely free and mostly effortless. I would really like to personally thank Jeremy and other guys from [fast.ai](https://www.fast.ai/) for their great work on this template.
