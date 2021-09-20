@@ -21,6 +21,7 @@ And this in fact yields correct result!
 ---
 
 So I got the correct result using the straight-forward approach! I was ecstatic! But soon my hopes were crushed. Let's consider the next derivative:
+
 $$
 \frac{\partial L}{\partial W} = \frac{\partial L}{\partial Y} \frac{\partial Y}{\partial W} = \frac{\partial L}{\partial Y} X
 $$
@@ -28,6 +29,7 @@ $$
 I did exactly the same thing I did for the previous derivative so nothing can go wrong, right? Let's consider these tensors' shapes. The tensor $\frac{\partial L}{\partial Y}$ has a shape of $[B, M]$ and tensor $X$ has a shape of $[B, N]$. Wait a minute! This means that I cannot take that dot product! Is that it? Must I fall back to element-wise differentiation and guessing the appropriate tensor operations?
 
 Those tensors' shapes along with the fact that tensor $\frac{\partial L}{\partial W}$ should have a shape of $[N, M]$, suggest that the product should be rearranged in the following fashion:
+
 $$
 \frac{\partial L}{\partial W} = X^T \frac{\partial L}{\partial Y}
 $$
@@ -37,21 +39,25 @@ And this is in fact the right answer (yet again check out the [aforementioned pa
 It took quite an effort to find the answer, but I found it [in this answer](https://math.stackexchange.com/a/3850121/398144) on [Mathematics Stack Exchange](https://math.stackexchange.com/)! Here I'd like to share it with you.
 
 First, consider the following detail: if I have a scalar function of a tensor (e.g. loss $L$ of my layer's output $Y$), then its differential $dL$ can be written as:
+
 $$
 dL = \frac{\partial L}{\partial Y} : dY
 $$
 
 where "$:$" denotes the [Frobenius inner product](https://en.wikipedia.org/wiki/Frobenius_inner_product) operation. In our case it means:
+
 $$
 dL = \text{Tr}\left[\frac{\partial L}{\partial Y}^T dY\right]
 $$
 
 This is not some sophisticated theorem: if you were to consider the structure of those tensors, you'd find out that:
+
 $$
 \frac{\partial L}{\partial Y} : dY = \sum_{i,j} \frac{\partial L}{\partial Y_{ij}} dY_{ij} = dL
 $$
 
 Now let's consider the differential of $Y$:
+
 $$
 Y = XW + b \Rightarrow dY = dX W + W dX + db
 $$
@@ -63,25 +69,31 @@ For more detail please check out [The Matrix Cookbook](https://www.math.uwaterlo
 ---
 
 This in turn means that $dL$ can be rewritten as:
+
 $$
 dL = \frac{\partial L}{\partial Y} : dY = \frac{\partial L}{\partial Y} : (dX W + X dW + db) =
 $$
+
 $$
 = \frac{\partial L}{\partial Y} : dX W + \frac{\partial L}{\partial Y} : X dW + \frac{\partial L}{\partial Y} : db
 $$
 
 If now you were to remember, what the Frobenius inner product is and the fact that matrix trace is invariant under cyclic permutations (you can find more on this [here](https://en.wikipedia.org/wiki/Trace_(linear_algebra))), you'd find out that:
+
 $$
 dL = \frac{\partial L}{\partial Y} W^T : dX + X^T \frac{\partial L}{\partial Y} : dW + \frac{\partial L}{\partial Y} : db
 $$
 
 And hence you would get the following formulas:
+
 $$
 \frac{\partial L}{\partial X} = \frac{\partial L}{\partial Y} W^T
 $$
+
 $$
 \frac{\partial L}{\partial W} = X^T \frac{\partial L}{\partial Y}
 $$
+
 $$
 \frac{\partial L}{\partial b} = \frac{\partial L}{\partial Y}
 $$
