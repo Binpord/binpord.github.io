@@ -85,7 +85,9 @@ Now let's define our normalizing flow. As I mentioned earlier, let's settle for 
 $$
 f(x)^T = x^T W + b^T
 $$
-{% include note.html content='you might wonder, why did I write a formula for the transpose of a vector $f(x)$. This has to do with a fact that in PyTorch we mostly deal with batched inputs, which are matrices $X$ of size $B \times N$, where $B$ is the batch size and $N$ is the size of each single vector. This means that we get a matrix with **rows** corresponding to **transposed** elements. And in case of such input, our formula would look like following: $f(X) = XW + B$, which is the way I compute output in the following code.' %}
+
+> Note: you might wonder, why did I write a formula for the transpose of a vector $f(x)$. This has to do with a fact that in PyTorch we mostly deal with batched inputs, which are matrices $X$ of size $B \times N$, where $B$ is the batch size and $N$ is the size of each single vector. This means that we get a matrix with **rows** corresponding to **transposed** elements. And in case of such input, our formula would look like following: $f(X) = XW + B$, which is the way I compute output in the following code.
+
 Our `LinearFlow` model will have 2 main functions:
 1. `forward`, which implements our mapping $z = f(x)$ from unknown distribution $p_z(z)$ to our base distribution and
 2. `inverse`, which inverses our mapping $f$ into $x = f^{-1}(z)$.
