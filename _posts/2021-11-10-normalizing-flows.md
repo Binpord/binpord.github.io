@@ -92,7 +92,7 @@ Our `LinearFlow` model will have 2 main functions:
 1. `forward`, which implements our mapping $z = f(x)$ from unknown distribution $p_z(z)$ to our base distribution and
 2. `inverse`, which inverses our mapping $f$ into $x = f^{-1}(z)$.
 
-Let's implement them! One last thing is that we want to use our forward-pass to train our model, which means that we will need to return $\log \left| \det \frac{\partial f(x_i)}{\partial x_i} \right|$ from it. In case of our linear mapping, $\frac{\partial f(x_i)}{\partial x_i} = W^T$, which means that $\log \left| \det \frac{\partial f(x_i)}{\partial x_i} \right| = \log \left| \det W^T \right| = \log \left| \det W \right|$. In order to efficiently compute such logarithm, I use the PyTorch's [`slogdet` function](https://pytorch.org/docs/stable/generated/torch.slogdet.html).
+Let's implement them! One last thing is that we want to use our forward-pass to train our model, which means that we will need to return $\log \left\| \det \frac{\partial f(x_i)}{\partial x_i} \right\|$ from it. In case of our linear mapping, $\frac{\partial f(x_i)}{\partial x_i} = W^T$, which means that $\log \left\| \det \frac{\partial f(x_i)}{\partial x_i} \right\| = \log \left\| \det W^T \right\| = \log \left\| \det W \right\|$. In order to efficiently compute such logarithm, I use the PyTorch's [`slogdet` function](https://pytorch.org/docs/stable/generated/torch.slogdet.html).
 
 ```python
 import torch.nn as nn
