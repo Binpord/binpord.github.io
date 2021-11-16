@@ -2,7 +2,7 @@
 
 
 
-Suppose we have a sample of objects $X = \{x_i\}_{i=1}^n$ that come from an unknown distribution $p_x(x)$ and we want our model to *learn this distribution*. What do I mean by learning a distribution? There are many ways to define such task, but data scientists mostly settle for 2 things:
+Suppose we have a sample of objects $X = \\{x_i\\}_{i=1}^n$ that come from an unknown distribution $p_x(x)$ and we want our model to *learn this distribution*. What do I mean by learning a distribution? There are many ways to define such task, but data scientists mostly settle for 2 things:
 1. learning to **score** the objects' probability, i.e. learning the probability density function $p_x(x)$, and/or
 2. learning to sample from this unknown distribution, which implies the ability to **sample new, unseen objects**.
 
