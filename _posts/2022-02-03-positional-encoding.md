@@ -54,7 +54,7 @@ plot_pos_emb(seq_len=50, emb_size=128, denom_base=1e4)
 ```
 
 
-![png](2022-02-03-positional-encoding_files/output_3_0.png)
+![png](/images/2022-02-03-positional-encoding_files/output_3_0.png)
 
 
 Now that we can easily visualize our embeddings, let's play around with its parameters. Let's start with the `emb_size`. The frequences $\omega_i$ form a geometric progression from 1 to `1 / denom_base`, i.e. somewhat *evenly* cover the fixed (given the `denom_base` is fixed) range. This means that increasing our model's embedding size will simply yield the similar but smoother version of the original image. Let's check this hypothesis:
@@ -64,7 +64,7 @@ plot_pos_emb(seq_len=50, emb_size=256, denom_base=1e4, width=40)
 ```
 
 
-![png](2022-02-03-positional-encoding_files/output_5_0.png)
+![png](/images/2022-02-03-positional-encoding_files/output_5_0.png)
 
 
 Indeed, we see very similar image, but with more components on horizontal axis!
@@ -81,11 +81,11 @@ for start_pos in range(0, n_plots * seq_len, seq_len):
 ```
 
 
-![png](2022-02-03-positional-encoding_files/output_7_0.png)
+![png](/images/2022-02-03-positional-encoding_files/output_7_0.png)
 
 
 
-![png](2022-02-03-positional-encoding_files/output_7_1.png)
+![png](/images/2022-02-03-positional-encoding_files/output_7_1.png)
 
 
 After we eliminated the `emb_size` and `seq_len`, we actually got to the least obvious parameter - the `denom_base`. Proposed positional encoding splits the position information between `emb_size` frequences, the frequencies being:
@@ -113,7 +113,7 @@ plt.show()
 ```
 
 
-![png](2022-02-03-positional-encoding_files/output_9_0.png)
+![png](/images/2022-02-03-positional-encoding_files/output_9_0.png)
 
 
 So the bigger the base number is, the faster frequency decreases with the index in embedding vector. What does this mean? Well, the lower the frequency is, the less sinus/cosinus value changes with the same change in $pos$ argument. We already saw that in previous visualizations: first few components change with each change rapidly with every new position, whilst the last half of components seem to be almost constant for the first 50 positions. Given this observation, we could hypothesise that if we were to decrease the `denom_base` we would see more components changing rapidly and if we were to increase the `denom_base` we would see even less components changing at all. Let's check this hypothesis!
@@ -125,7 +125,7 @@ plot_pos_emb(seq_len=50, emb_size=128, denom_base=1e2)
 ```
 
 
-![png](2022-02-03-positional-encoding_files/output_11_0.png)
+![png](/images/2022-02-03-positional-encoding_files/output_11_0.png)
 
 
 And here are position embeddings for `denom_base` of $10^8$:
@@ -135,7 +135,7 @@ plot_pos_emb(seq_len=50, emb_size=128, denom_base=1e8)
 ```
 
 
-![png](2022-02-03-positional-encoding_files/output_13_0.png)
+![png](/images/2022-02-03-positional-encoding_files/output_13_0.png)
 
 
 Just like we expected!
@@ -157,7 +157,7 @@ plt.show()
 ```
 
 
-![png](2022-02-03-positional-encoding_files/output_16_0.png)
+![png](/images/2022-02-03-positional-encoding_files/output_16_0.png)
 
 
 It might not be too easy to see from the top row, however, once you look at the second and third rows, you must see it! It works just like clocks! The point goes in clock-wise direction on a unit circle and each pair of values encodes position on a clock with its own time unit, just like second, minute and hour hands. First three circles are also clocks, however, the unit is so small for them, that each step leaps the hand forward too much and hence we see the distinct points and regions. This is how our model can understand, what position is it looking at. It just checks the clocks!
