@@ -26,7 +26,7 @@ And this is how we can visualize the same process when working with images (visu
 
 Authors note that schedule $\beta_t$ can be learned during training process, however this does not seem to provide any significant boost in quality. For this reason, authors stick with a pre-defined schedule and later articles tend to do so as well.
 
-Defining the noising process in such a way has several important features. For example, there is no need to apply $q$ repeatedly to sample $x_t \sim q(x_t \mid x_0)$. Instead, we can derive $q(x_t \mid x_0)$ in closed form. If we denote $\alpha_t = 1 - \beta_t$ and $\bar{\alpha}_t = \prod\limits_{s=0}^t \alpha_s$, we can show that:
+Defining the noising process in such a way has several important features. For example, there is no need to apply $q$ repeatedly to sample $x_t \sim q(x_t \mid x_0)$. Instead, we can derive $q(x_t \mid x_0)$ in closed form. If we denote $\alpha_t = 1 - \beta_t$ and $\bar{\alpha}_t = \prod_{s=0}^t \alpha_s$, we can show that:
 
 $$ q(x_t \mid x_0) = \mathcal{N}(x_t \mid \sqrt{\bar{\alpha}_t} x_0,\ (1 - \bar{\alpha}_t) \mathbf{I}) $$
 
@@ -172,7 +172,11 @@ This wraps up theory introduced in 2015 paper. Authors train their model on seve
 
 The samples might not look too appealing, but we have to cut authors some slack: first of all, it was back in 2015 and, second of all, authors used multi-layer perceptrons to predict $\mu_\theta(x_t, t)$ and $\Sigma_\theta(x_t, t)$ as opposed to using convolutional networks (remeber, 2015). The main contribution of this paper is the new approach, not an astonishing result.
 
-Now we shall fast-forward to 2020 and look another paper called [Denoising Diffusion Probabilistic Models](https://arxiv.org/abs/2006.11239) (the name has became a term and is often reduced to DDPM). Authors of this work note that instead of predicting $\mu_\theta(x_t, t)$ and $\Sigma_\theta(x_t, t)$ it is benefitial to fix covariance to $\beta_t \mathbf{I}$ and predict the addendum noise $\varepsilon$ from the reparametrized equation $x_t = \sqrt{\bar{\alpha}_t} x_0 + \sqrt{1 - \bar{\alpha}_t} \varepsilon$ instead of the $x_t$ itself. In this case instead of two models $\mu_\theta(x_t, t)$ and $\Sigma_\theta(x_t, t)$ we end up with just one model $\varepsilon_\theta(x_t, t)$.
+Now we shall fast-forward to 2020 and look another paper called [Denoising Diffusion Probabilistic Models](https://arxiv.org/abs/2006.11239) (the name has became a term and is often reduced to DDPM). Authors of this work note that instead of predicting $\mu_\theta(x_t, t)$ and $\Sigma_\theta(x_t, t)$ it is benefitial to fix covariance to $\beta_t \mathbf{I}$ and predict the addendum noise $\varepsilon$ from the reparametrized equation
+
+$$ x_t = \sqrt{\bar{\alpha}_t} x_0 + \sqrt{1 - \bar{\alpha}_t} \varepsilon $$
+
+instead of the $x_t$ itself. In this case instead of two models $\mu_\theta(x_t, t)$ and $\Sigma_\theta(x_t, t)$ we end up with just one model $\varepsilon_\theta(x_t, t)$.
 
 Predicting random noise $\varepsilon_\theta(x_t, t)$ might seem odd at first. But let me be clear: the noise is random before we compute the $x_t$. Once we've computed the $x_t$, the $\varepsilon$ is fixed and our model needs to predict it via looking at the noised image $x_t$ and trying to decouple the noise from the original image $x_0$:
 
@@ -184,7 +188,7 @@ It is possible to train such model via minimizing the same objective $L_{\text{v
 
 $$ L_{\text{simple}} = \mathbb{E}_{x_0 \sim q(x_0), t\sim[1, T], \varepsilon \sim \mathcal{N}(0, \mathbf{I})} [\| \varepsilon - \varepsilon_\theta(x_t, t) \|^2] $$
 
-The training goes as follows: we choose an image $x_0$ from training dataset, sample step $t \sim \text{U}[0, T]$ and noise $\varepsilon \sim \mathcal{N}(0, \mathbf{I})$. We then compute $x_t = \sqrt{\bar{\alpha}_t} x_0 + \sqrt{1 - \bar{\alpha}_t} \varepsilon$, predict $\varepsilon_\theta(x_t, t)$ and minimize MSE loss between it and the actual $\varepsilon$.
+The training goes as follows: we choose an image $x_0$ from training dataset, sample step $t \sim \text{U}[0, T]$ and noise $\varepsilon \sim \mathcal{N}(0, \mathbf{I})$. We then compute $x_t$, predict $\varepsilon_\theta(x_t, t)$ and minimize MSE loss between it and the actual $\varepsilon$.
 
 Apart from the noise prediction, authors also ditch the MLP and use a modern U-Net based convolutional architecture. They train their model on several datasets including CelebA-HQ, LSUN and CIFAR-10. Here is a sample from their models:
 
