@@ -26,7 +26,11 @@ And this is how we can visualize the same process when working with images (visu
 
 Authors note that schedule $\beta_t$ can be learned during training process, however this does not seem to provide any significant boost in quality. For this reason, authors stick with a pre-defined schedule and later articles tend to do so as well.
 
-Defining the noising process in such a way has several important features. For example, there is no need to apply $q$ repeatedly to sample $x_t \sim q(x_t \mid x_0)$. Instead, we can derive $q(x_t \mid x_0)$ in closed form. If we denote $\alpha_t = 1 - \beta_t$ and $\bar{\alpha}_t = \prod_{s=0}^t \alpha_s$, we can show that:
+Defining the noising process in such a way has several important features. For example, there is no need to apply $q$ repeatedly to sample $x_t \sim q(x_t \mid x_0)$. Instead, we can derive $q(x_t \mid x_0)$ in closed form. If we denote
+
+$$ \alpha_t = 1 - \beta_t,\ \bar{\alpha}_t = \prod_{s=0}^t \alpha_s $$
+
+we can show that:
 
 $$ q(x_t \mid x_0) = \mathcal{N}(x_t \mid \sqrt{\bar{\alpha}_t} x_0,\ (1 - \bar{\alpha}_t) \mathbf{I}) $$
 
