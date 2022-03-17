@@ -77,7 +77,7 @@ plt.grid()
 ```
 
 
-![png](/images/2021-11-10-normalizing-flows_files/output_2_0.png)
+![png](/images/2021-11-10-normalizing_flows_files/output_2_0.png)
 
 
 Now let's define our normalizing flow. As I mentioned earlier, let's settle for a linear function, which in our case can be defined as
@@ -182,13 +182,13 @@ image.save('normalizing-flows-training.gif', 'GIF', append_images=images, save_a
 
 This code produces the following `gif`:
 
-![training progress](/images/2021-11-10-normalizing-flows_files/normalizing-flows-training.gif "training progress")
+![training progress](/images/2021-11-10-normalizing_flows_files/normalizing-flows-training.gif "training progress")
 
 It works! Well, it works, given that we are using a very simple flow and it is solving a very simple task. However, it still amazes me that we can use sum of some log probability and a logdet of our matrix to learn a transformation from one gaussian to another. Well, here you go!
 
 It goes without saying that normalizing flows are not limited to linear transformations on a plane. Researchers have come up with multiple different types of normalizing flows (and you can find many references and impementations in [this github repository](https://github.com/kamenbliznashki/normalizing_flows)). And the greatest part of it is that you can stack them just like you'd stack layers in a neural network! Given that each flow in a sequence provides you with a logdet and an `inverse` method, you can easily train it using a logprob from base distribution and a sum of logdets and inverse this sequence afterwards without any problem!
 
-![stuck more flows](/images/2021-11-10-normalizing-flows_files/normalizing-flows.png)
+![stuck more flows](/images/2021-11-10-normalizing_flows_files/normalizing-flows.png)
 
 *Image is taken from [this great blog post](https://lilianweng.github.io/lil-log/2018/10/13/flow-based-deep-generative-models.html) by Lilian Weng.*
 
