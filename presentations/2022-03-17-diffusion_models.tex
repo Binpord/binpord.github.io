@@ -1,0 +1,295 @@
+\documentclass{beamer}
+
+% \usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+
+\usepackage{parskip}
+
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+
+\newcommand{\Sum}{\sum\limits}
+\newcommand{\Prod}{\prod\limits}
+\newcommand{\Int}{\int\limits}
+
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator*{\argmax}{argmax}
+\DeclareMathOperator*{\argmin}{argmin}
+
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\bmu}{\boldsymbol{\mu}}
+
+\title{Diffusion Models}
+\author{Shiianov Vadim}
+
+\begin{document}
+
+\begin{frame}
+    \titlepage
+\end{frame}
+
+\begin{frame}{Reparametrization trick}
+    $$ \xi \sim \mathcal{N}(\xi|\mu, \sigma^2) \Leftrightarrow \xi = \mu + \varepsilon \sigma,\ \varepsilon \sim \mathcal{N}(\varepsilon|0, 1) $$
+\end{frame}
+
+\begin{frame}{Introduction}
+    \begin{figure}
+        \includegraphics[width=\textwidth]{../images/2022-03-17-diffusion_models_files/intro.png}
+        \caption{Table taken from \url{https://arankomatsuzaki.wordpress.com/2021/03/04/state-of-the-art-image-generative-models/}.}
+    \end{figure}
+\end{frame}
+
+\begin{frame}
+    \includegraphics[width=\textwidth]{../images/2022-03-17-diffusion_models_files/dm_paper.png}
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: forward trajectory \cite{sohldickstein2015deep}}
+    $$ q(x_t | x_{t-1}) = \mathcal{N}(x_t|\sqrt{1 - \beta_t} x_{t-1},\ \beta_t \mathbf{I}) $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: forward trajectory \cite{sohldickstein2015deep}}
+    $$ q(x_t | x_{t-1}) = \mathcal{N}(x_t|\sqrt{1 - \beta_t} x_{t-1},\ \beta_t \mathbf{I}) $$ \\~\\
+    \includegraphics[width=\textwidth]{../images/2022-03-17-diffusion_models_files/swiss_roll_noising.png}
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: forward trajectory \cite{sohldickstein2015deep}}
+    $$ q(x_t | x_{t-1}) = \mathcal{N}(x_t|\sqrt{1 - \beta_t} x_{t-1},\ \beta_t \mathbf{I}) $$ \\~\\
+    \includegraphics[width=\textwidth]{../images/2022-03-17-diffusion_models_files/noising.png}
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: forward trajectory \cite{sohldickstein2015deep}}
+    $$ q(x_t | x_{t-1}) = \mathcal{N}(x_t|\sqrt{1 - \beta_t} x_{t-1},\ \beta_t \mathbf{I}) $$ \\~\\
+    \includegraphics[width=\textwidth]{../images/2022-03-17-diffusion_models_files/noising.png} \\~\\
+    $$ \alpha_t = 1 - \beta_t,~\bar{\alpha}_t = \prod\limits_{s=0}^t \alpha_s $$
+    $$ q(x_t|x_0) = \mathcal{N}(x_t|\sqrt{\bar{\alpha}_t} x_0,\ (1 - \bar{\alpha}_t) \mathbf{I}) $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: forward trajectory \cite{sohldickstein2015deep}}
+    $$ q(x_t | x_{t-1}) = \mathcal{N}(x_t|\sqrt{1 - \beta_t} x_{t-1},\ \beta_t \mathbf{I}) $$ \\~\\
+    \includegraphics[width=\textwidth]{../images/2022-03-17-diffusion_models_files/noising.png} \\~\\
+    $$ \alpha_t = 1 - \beta_t,~\bar{\alpha}_t = \prod\limits_{s=0}^t \alpha_s $$
+    $$ q(x_t|x_0) = \mathcal{N}(x_t|\sqrt{\bar{\alpha}_t} x_0,\ (1 - \bar{\alpha}_t) \mathbf{I}) $$
+    $$ x_t = \sqrt{\bar{\alpha}_t} x_0 + \sqrt{1 - \bar{\alpha}_t} \varepsilon,\ \varepsilon \sim \mathcal{N}(\varepsilon | 0,\ \mathbf{I}) $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: forward trajectory \cite{sohldickstein2015deep}}
+    $$ q(x_t | x_{t-1}) = \mathcal{N}(x_t|\sqrt{1 - \beta_t} x_{t-1},\ \beta_t \mathbf{I}) $$ \\~\\
+    \includegraphics[width=\textwidth]{../images/2022-03-17-diffusion_models_files/noising.png} \\~\\
+    $$ q(x_{t-1}|x_t, x_0) = \mathcal{N}(x_{t-1} | \tilde{\mu}(x_t, x_0),\ \tilde{\beta}_t \mathbf{I}) $$
+    $$ \tilde{\mu}(x_t, x_0) = \frac{\sqrt{\bar{\alpha}_{t-1}} \beta_t}{1 - \bar{\alpha}_t} x_0 + \frac{\sqrt{\alpha_t} (1 - \bar{\alpha}_{t-1})}{1 - \bar{\alpha}_t} x_t $$
+    $$ \tilde{\beta}_t = \frac{1 - \bar{\alpha}_{t-1}}{1 - \bar{\alpha}_t} \beta_t $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: reverse trajectory \cite{sohldickstein2015deep}}
+    $$ p_\theta(x_{t-1}|x_t) = \mathcal{N}(x_{t-1} | \mu_\theta(x_t, t),\ \Sigma_\theta(x_t, t)) $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: reverse trajectory \cite{sohldickstein2015deep}}
+    $$ p_\theta(x_{t-1}|x_t) = \mathcal{N}(x_{t-1} | \mu_\theta(x_t, t),\ \Sigma_\theta(x_t, t)) $$ \\~\\
+    \includegraphics[width=\textwidth]{../images/2022-03-17-diffusion_models_files/swiss_roll_denoising.png}
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: reverse trajectory \cite{sohldickstein2015deep}}
+    $$ p_\theta(x_{t-1}|x_t) = \mathcal{N}(x_{t-1} | \mu_\theta(x_t, t),\ \Sigma_\theta(x_t, t)) $$ \\~\\
+    \includegraphics[width=\textwidth]{../images/2022-03-17-diffusion_models_files/denoising.png}
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: training objective \cite{sohldickstein2015deep}}
+    $$ \log p_\theta(x_0) =\ ??? $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: training objective \cite{sohldickstein2015deep}}
+    $$ \log p_\theta(x_0) =\ ??? $$
+    $$ p_\theta(x_0, \dots, x_T) = p(x_T) \prod_{t=1}^T p_\theta(x_{t-1}|x_t) $$
+    $$ p_\theta(x_0) = \int p_\theta(x_0, \dots, x_T) dx_1 \dots dx_T $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: training objective \cite{sohldickstein2015deep}}
+    $$ p_\theta(x_0) = \int p_\theta(x_0, \dots, x_T) dx_1 \dots dx_T $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: training objective \cite{sohldickstein2015deep}}
+    $$ p_\theta(x_0) = \int p_\theta(x_0, \dots, x_T) dx_1 \dots dx_T = $$
+    $$ = \int p_\theta(x_0, \dots, x_T) \frac{q(x_1, \dots, x_T|x_0)}{q(x_1, \dots, x_T|x_0)} dx_1 \dots dx_T = $$
+    $$ = \int q(x_1, \dots, x_T|x_0) \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T|x_0)} dx_1 \dots dx_T $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: training objective \cite{sohldickstein2015deep}}
+    $$ p_\theta(x_0) = \int p_\theta(x_0, \dots, x_T) dx_1 \dots dx_T = $$
+    $$ = \int p_\theta(x_0, \dots, x_T) \frac{q(x_1, \dots, x_T|x_0)}{q(x_1, \dots, x_T|x_0)} dx_1 \dots dx_T = $$
+    $$ = \int q(x_1, \dots, x_T|x_0) \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T|x_0)} dx_1 \dots dx_T = $$
+    $$ = \mathbb{E}_q \left[ \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T|x_0)} \right] $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: training objective \cite{sohldickstein2015deep}}
+    $$ p_\theta(x_0) = \mathbb{E}_q \left[ \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T|x_0)} \right] $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: training objective \cite{sohldickstein2015deep}}
+    $$ p_\theta(x_0) = \mathbb{E}_q \left[ \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T|x_0)} \right] $$
+    $$ \log p_\theta(x_0) = \log \mathbb{E}_{q(x_1, \dots, x_T|x_0)} \left[ \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T|x_0)} \right] \geq $$
+    $$ \geq \mathbb{E}_{q(x_1, \dots, x_T|x_0)} \left[ \log \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T|x_0)} \right] $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: training objective \cite{sohldickstein2015deep}}
+    $$ \log p_\theta(x_0) \geq \mathbb{E}_{q(x_1, \dots, x_T|x_0)} \left[ \log \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T|x_0)} \right] $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: training objective \cite{sohldickstein2015deep}}
+    $$ \log p_\theta(x_0) \geq \mathbb{E}_{q(x_1, \dots, x_T|x_0)} \left[ \log \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T|x_0)} \right] = $$
+    $$ = \mathbb{E}_q \left[ \log \left( p(x_T) \prod_{t=1}^T \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} \right) \right] $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: training objective \cite{sohldickstein2015deep}}
+    $$ \log p_\theta(x_0) \geq \mathbb{E}_{q(x_1, \dots, x_T|x_0)} \left[ \log \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T|x_0)} \right] = $$
+    $$ = \mathbb{E}_q \left[ \log \left( p(x_T) \prod_{t=1}^T \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} \right) \right] $$
+    $$ = \mathbb{E}_q \left[ \log p(x_T) + \sum_{t=1}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} \right] = $$
+    $$ = \mathbb{E}_q \left[ \log p(x_T) + \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} + \log \frac{p_\theta(x_0|x_1)}{q(x_1|x_0)} \right] $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: training objective \cite{sohldickstein2015deep}}
+    $$ \log p_\theta(x_0) \geq \mathbb{E}_q \left[ \log p(x_T) + \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} + \log \frac{p_\theta(x_0|x_1)}{q(x_1|x_0)} \right] $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: training objective \cite{sohldickstein2015deep}}
+    $$ \log p_\theta(x_0) \geq \mathbb{E}_q \left[ \log p(x_T) + \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} + \log \frac{p_\theta(x_0|x_1)}{q(x_1|x_0)} \right] $$
+    $$ q(x_t|x_{t-1}) = q(x_t|x_{t-1}, x_0) $$
+    $$ q(x_t|x_{t-1}, x_0) = \frac{q(x_{t-1}|x_t, x_0) q(x_t|x_0)}{q(x_{t-1}|x_0)} $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: training objective \cite{sohldickstein2015deep}}
+    $$ \log p_\theta(x_0) \geq \mathbb{E}_q \left[ \log p(x_T) + \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} + \log \frac{p_\theta(x_0|x_1)}{q(x_1|x_0)} \right] $$
+    $$ q(x_t|x_{t-1}) = q(x_t|x_{t-1}, x_0) $$
+    $$ q(x_t|x_{t-1}, x_0) = \frac{q(x_{t-1}|x_t, x_0) q(x_t|x_0)}{q(x_{t-1}|x_0)} $$
+    $$ \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} = \sum_{t=2}^T \log \left( \frac{p_\theta(x_{t-1}|x_t)}{q(x_{t-1}|x_t, x_0)} \cdot \frac{q(x_{t-1}|x_0)}{q(x_t|x_0)} \right) = $$
+    $$ = \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_{t-1}|x_t, x_0)} + \sum_{t=2}^T \log \frac{q(x_{t-1}|x_0)}{q(x_t|x_0)} $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: training objective \cite{sohldickstein2015deep}}
+    $$ \log p_\theta(x_0) \geq \mathbb{E}_q \left[ \log p(x_T) + \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} + \log \frac{p_\theta(x_0|x_1)}{q(x_1|x_0)} \right] $$
+    $$ \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} = \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_{t-1}|x_t, x_0)} + \sum_{t=2}^T \log \frac{q(x_{t-1}|x_0)}{q(x_t|x_0)} $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: training objective \cite{sohldickstein2015deep}}
+    $$ \log p_\theta(x_0) \geq \mathbb{E}_q \left[ \log p(x_T) + \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} + \log \frac{p_\theta(x_0|x_1)}{q(x_1|x_0)} \right] $$
+    $$ \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} = \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_{t-1}|x_t, x_0)} + \sum_{t=2}^T \log \frac{q(x_{t-1}|x_0)}{q(x_t|x_0)} $$
+    $$ \sum_{t=2}^T \log \frac{q(x_{t-1}|x_0)}{q(x_t|x_0)} = \sum_{t=2}^T (\log q(x_{t-1}|x_0) - \log q(x_t|x_0)) $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: training objective \cite{sohldickstein2015deep}}
+    $$ \log p_\theta(x_0) \geq \mathbb{E}_q \left[ \log p(x_T) + \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} + \log \frac{p_\theta(x_0|x_1)}{q(x_1|x_0)} \right] $$
+    $$ \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} = \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_{t-1}|x_t, x_0)} + \sum_{t=2}^T \log \frac{q(x_{t-1}|x_0)}{q(x_t|x_0)} $$
+    $$ \sum_{t=2}^T \log \frac{q(x_{t-1}|x_0)}{q(x_t|x_0)} = \sum_{t=2}^T (\log q(x_{t-1}|x_0) - \log q(x_t|x_0)) = $$
+    $$ = \log q(x_1|x_0) - \log q(x_T|x_0) $$
+\end{frame}
+
+
+
+\begin{frame}[t]{Diffusion Models: training objective \cite{sohldickstein2015deep}}
+    $$ \log p_\theta(x_0) \geq \mathbb{E}_q \left[ \log p(x_T) + \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} + \log \frac{p_\theta(x_0|x_1)}{q(x_1|x_0)} \right] $$
+    $$ \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} = \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_{t-1}|x_t, x_0)} + \sum_{t=2}^T \log \frac{q(x_{t-1}|x_0)}{q(x_t|x_0)} $$
+    $$ \sum_{t=2}^T \log \frac{q(x_{t-1}|x_0)}{q(x_t|x_0)} = \log q(x_1|x_0) - \log q(x_T|x_0) $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: training objective \cite{sohldickstein2015deep}}
+    $$ \log p_\theta(x_0) \geq \mathbb{E}_q \left[ \log p(x_T) + \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} + \log \frac{p_\theta(x_0|x_1)}{q(x_1|x_0)} \right] $$
+    $$ \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} = \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_{t-1}|x_t, x_0)} + \sum_{t=2}^T \log \frac{q(x_{t-1}|x_0)}{q(x_t|x_0)} = $$
+    $$ = \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_{t-1}|x_t, x_0)} + \log q(x_1|x_0) - \log q(x_T|x_0) $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: training objective \cite{sohldickstein2015deep}}
+    $$ \log p_\theta(x_0) \geq \mathbb{E}_q \left[ \log p(x_T) + \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} + \log \frac{p_\theta(x_0|x_1)}{q(x_1|x_0)} \right] = $$
+    $$ = \mathbb{E}_q \left[ \log \frac{p(x_T)}{q(x_T|x_0)} + \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_{t-1}|x_t, x_0)} + \log p_\theta(x_0|x_1) \right] $$
+\end{frame}
+
+\begin{frame}[t]{Diffusion Models: training objective \cite{sohldickstein2015deep}}
+    $$ \log p_\theta(x_0) \geq \mathbb{E}_q \left[ \log p(x_T) + \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} + \log \frac{p_\theta(x_0|x_1)}{q(x_1|x_0)} \right] = $$
+    $$ = \mathbb{E}_q \left[ \log \frac{p(x_T)}{q(x_T|x_0)} + \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_{t-1}|x_t, x_0)} + \log p_\theta(x_0|x_1) \right] = $$
+    $$ = - D_{KL} (q(x_T|x_0)\ \|\ p(x_T)) - \sum_{t=2}^T D_{KL} (q(x_{t-1}|x_t, x_0)\ \|\ p_\theta(x_{t-1}|x_t)) + $$
+    $$ + \log p_\theta(x_0|x_1) $$
+\end{frame}
+
+\begin{frame}{Diffusion Models: training objective \cite{sohldickstein2015deep}}
+    $$ \mathbb{E}[-\log p_\theta(x_0)] \leq L_{\text{vlb}} = L_0 + \sum_{t=1}^T L_t $$ \\~\\
+    $$ L_0 = -\log p_\theta(x_0|x_1) $$
+    $$ L_{t-1} = D_{KL} (q(x_{t-1}|x_t, x_0)\ \|\ p_\theta(x_{t-1}|x_t)) $$
+    $$ L_T = D_{KL} (q(x_T|x_0)\ \|\ p(x_T)) $$
+\end{frame}
+
+\begin{frame}{Diffusion Models: results \cite{sohldickstein2015deep}}
+    \begin{columns}
+        \begin{column}{0.565\textwidth}
+            \begin{center}
+                \includegraphics[width=\textwidth]{../images/2022-03-17-diffusion_models_files/dm_mnist_sample.png}
+            \end{center}
+        \end{column}
+        \begin{column}{0.435\textwidth}
+            \begin{center}
+                \includegraphics[width=\textwidth]{../images/2022-03-17-diffusion_models_files/dm_cifar_sample.png}
+            \end{center}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[t]{Denoising Diffusion Probabilistic Models \cite{ho2020denoising}}
+    $$ x_t = \sqrt{\bar{\alpha}_t} x_0 + \sqrt{1 - \bar{\alpha}_t} \varepsilon $$
+\end{frame}
+
+\begin{frame}[t]{Denoising Diffusion Probabilistic Models \cite{ho2020denoising}}
+    $$ x_t = \sqrt{\bar{\alpha}_t} x_0 + \sqrt{1 - \bar{\alpha}_t} \varepsilon $$ \\~\\
+    \begin{center}
+        \includegraphics[width=0.8\textwidth]{../images/2022-03-17-diffusion_models_files/reparam.png}
+    \end{center}
+\end{frame}
+
+\begin{frame}[t]{Denoising Diffusion Probabilistic Models \cite{ho2020denoising}}
+    $$ x_t = \sqrt{\bar{\alpha}_t} x_0 + \sqrt{1 - \bar{\alpha}_t} \varepsilon $$ \\~\\
+    \begin{center}
+        \includegraphics[width=0.8\textwidth]{../images/2022-03-17-diffusion_models_files/reparam.png}
+    \end{center}
+
+    $$ L_{\text{simple}} = \mathbb{E}_{x_0 \sim q(x_0), t\sim[1, T], \varepsilon \sim \mathcal{N}(0, \mathbf{I})} [\| \varepsilon - \varepsilon_\theta(x_t, t) \|^2] $$
+\end{frame}
+
+\begin{frame}{Denoising Diffusion Probabilistic Models \cite{ho2020denoising}}
+    \includegraphics[width=\textwidth]{../images/2022-03-17-diffusion_models_files/ddpm_sample.png}
+\end{frame}
+
+\begin{frame}{Diffusion Models Beat GANs on Image Synthesis \cite{dhariwal2021diffusion}}
+    \begin{itemize}
+        \item $\Sigma_\theta(x_t, t) = \exp(v(x_t, t) \log \beta_t + (1 - v(x_t, t)) \log \tilde\beta_t)$
+        \item $L_\text{simple} + \lambda L_\text{vlb}$
+        \item Adaptive Group Norm + Classifier Guidance
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Diffusion Models Beat GANs on Image Synthesis \cite{dhariwal2021diffusion}}
+    \includegraphics[width=\textwidth]{../images/2022-03-17-diffusion_models_files/openai_sample.png}
+\end{frame}
+
+\begin{frame}{Image-to-Image Diffusion Models \cite{saharia2021palette}}
+    \includegraphics[width=\textwidth]{../images/2022-03-17-diffusion_models_files/im2im.png}
+\end{frame}
+
+\begin{frame}{My Contacts}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            Vadim Shiianov \\
+            E-Mail: vadimsh853@gmail.com \\
+            Telegram: \url{https://t.me/binpord} \\
+            My Blog: \url{https://binpord.github.io/}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{center}
+                \includegraphics[width=0.7\textwidth]{../images/me.jpg}
+            \end{center}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[allowframebreaks]{References}
+    \bibliographystyle{plain}
+    \bibliography{2022-03-17-diffusion_models.bib}
+\end{frame}
+
+\end{document}
