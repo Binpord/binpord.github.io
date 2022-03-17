@@ -10,7 +10,7 @@ Diffusion models were first introduced in 2015 paper [Deep Unsupervised Learning
 
 That was the intuition, now let us look closely at a more formal definition of our model. As I already mentioned, we first need to define a Markov chain, that will take our source image $x_0$ and gradually add noise to it. Particularly, each step $t$ will add Gaussian noise according to some variance schedule $\beta_t$. However, simply adding noise isn't enough, as we need to ensure that the mean value goes down to zero to comply with standard normal distribution. For this reason, before adding noise, we also multiply the object $x_{t-1}$ by $\sqrt{1 - \beta_t}$:
 
-$$ q(x_t | x_{t-1}) = \mathcal{N}(x_t|\sqrt{1 - \beta_t} x_{t-1},\ \beta_t \mathbf{I}) $$
+$$ q(x_t \mid x_{t-1}) = \mathcal{N}(x_t \mid \sqrt{1 - \beta_t} x_{t-1},\ \beta_t \mathbf{I}) $$
 
 Authors note that, given each $\beta_t$ is small, we can view this process as continuos gaussian diffusion, which probably is the origin of the term *diffusion* models.
 
@@ -26,23 +26,23 @@ And this is how we can visualize the same process when working with images (visu
 
 Authors note that schedule $\beta_t$ can be learned during training process, however this does not seem to provide any significant boost in quality. For this reason, authors stick with a pre-defined schedule and later articles tend to do so as well.
 
-Defining the noising process in such a way has several important features. For example, there is no need to apply $q$ repeatedly to sample $x_t \sim q(x_t|x_0)$. Instead, we can derive $q(x_t|x_0)$ in closed form. If we denote $\alpha_t = 1 - \beta_t$ and $\bar{\alpha}_t = \prod\limits_{s=0}^t \alpha_s$, we can show that:
+Defining the noising process in such a way has several important features. For example, there is no need to apply $q$ repeatedly to sample $x_t \sim q(x_t \mid x_0)$. Instead, we can derive $q(x_t \mid x_0)$ in closed form. If we denote $\alpha_t = 1 - \beta_t$ and $\bar{\alpha}_t = \prod\limits_{s=0}^t \alpha_s$, we can show that:
 
-$$ q(x_t|x_0) = \mathcal{N}(x_t|\sqrt{\bar{\alpha}_t} x_0,\ (1 - \bar{\alpha}_t) \mathbf{I}) $$
+$$ q(x_t \mid x_0) = \mathcal{N}(x_t \mid \sqrt{\bar{\alpha}_t} x_0,\ (1 - \bar{\alpha}_t) \mathbf{I}) $$
 
 This is a very important formula and it has three important consequences.
 
-The first one is the fact that, under reasonable settings for $\beta_t$ and $T$, distribution $q(x_T|x_0)$ is close to standard normal, just like we wanted.
+The first one is the fact that, under reasonable settings for $\beta_t$ and $T$, distribution $q(x_T \mid x_0)$ is close to standard normal, just like we wanted.
 
 The second consequence is the fact that we can rewrite that formula using the reparametrization trick:
 
-$$ x_t = \sqrt{\bar{\alpha}_t} x_0 + \sqrt{1 - \bar{\alpha}_t} \varepsilon,\ \varepsilon \sim \mathcal{N}(\varepsilon | 0,\ \mathbf{I}) $$
+$$ x_t = \sqrt{\bar{\alpha}_t} x_0 + \sqrt{1 - \bar{\alpha}_t} \varepsilon,\ \varepsilon \sim \mathcal{N}(\varepsilon \mid 0,\ \mathbf{I}) $$
 
 This formula is the key to introducing the denosing diffusion probabilistic models and we will need it later on.
 
-Last but not least, we can derive the posterior distribution $q(x_{t-1}|x_t, x_0)$ using Bayes theorem:
+Last but not least, we can derive the posterior distribution $q(x_{t-1} \mid x_t, x_0)$ using Bayes theorem:
 
-$$ q(x_{t-1}|x_t, x_0) = \mathcal{N}(x_{t-1} | \tilde{\mu}(x_t, x_0),\ \tilde{\beta}_t \mathbf{I}) $$
+$$ q(x_{t-1} \mid x_t, x_0) = \mathcal{N}(x_{t-1} \mid \tilde{\mu}(x_t, x_0),\ \tilde{\beta}_t \mathbf{I}) $$
 
 $$ \tilde{\mu}(x_t, x_0) = \frac{\sqrt{\bar{\alpha}_{t-1}} \beta_t}{1 - \bar{\alpha}_t} x_0 + \frac{\sqrt{\alpha_t} (1 - \bar{\alpha}_{t-1})}{1 - \bar{\alpha}_t} x_t $$
 
@@ -50,9 +50,9 @@ $$ \tilde{\beta}_t = \frac{1 - \bar{\alpha}_{t-1}}{1 - \bar{\alpha}_t} \beta_t $
 
 This formula is crucial to defining our loss later on, plus it gives the lower bound on the variance of the reverse step. Indeed, if we were to consider the entropy of the reverse step, we could constrain it from both sides. It turns out that the lower bound for the variance is given by $\tilde\beta_t$ (the minimum of variance is achieved when we know the true $x_0$) and the upper bound is given by $\beta_t$ (which is the actual amount of noise we add at the step $t$).
 
-This concludes the forward trajectory. What about the reverse one? As I mentioned earlier, given $\beta_t$ is small, we can view our diffusion process as continuous, in which case reverse step $q(x_{t-1}|x_t)$ must have the identical functional form as the forward one. Since $q(x_t|x_{t-1})$ is a diagonal Gaussian distribution, then $q(x_{t-1}|x_t)$ should also be a diagonal Gaussian distribution meaning that on each step of the reverse trajectory we simply need to predict a mean $\mu_\theta(x_t, t)$ and a diagonal covariance matrix $\Sigma_\theta(x_t, t)$ in which case we would obtain:
+This concludes the forward trajectory. What about the reverse one? As I mentioned earlier, given $\beta_t$ is small, we can view our diffusion process as continuous, in which case reverse step $q(x_{t-1} \mid x_t)$ must have the identical functional form as the forward one. Since $q(x_t \mid x_{t-1})$ is a diagonal Gaussian distribution, then $q(x_{t-1} \mid x_t)$ should also be a diagonal Gaussian distribution meaning that on each step of the reverse trajectory we simply need to predict a mean $\mu_\theta(x_t, t)$ and a diagonal covariance matrix $\Sigma_\theta(x_t, t)$ in which case we would obtain:
 
-$$ p_\theta(x_{t-1}|x_t) = \mathcal{N}(x_{t-1} | \mu_\theta(x_t, t),\ \Sigma_\theta(x_t, t)) $$
+$$ p_\theta(x_{t-1} \mid x_t) = \mathcal{N}(x_{t-1} \mid \mu_\theta(x_t, t),\ \Sigma_\theta(x_t, t)) $$
 
 If now we found a way to train such model, we'd be able to reverse our diffusion process and convert our points from standard normal distribution back to points from data distribution $q(x_0)$.
 
@@ -68,83 +68,83 @@ Pretty much the same applies to images:
 
 We start of with an image where each pixel value is sampled from standard normal distribution and gradually denoise it, until we reach the $x_0$ which should come approximately from empirical data distribution $q(x_0)$, i.e. should be an actual image.
 
-At this point we know how to noise our images and how to reverse this process to restore our images. The only question left to answer is how do we train our model to correctly predict $\mu_\theta(x_t, t)$ and $\Sigma_\theta(x_t, t)$. Much like with most other probability-based approaches, we'd like to train our model via minimizing the negative log likelihood $\mathbb{E}[-\log p_\theta(x_0)]$. However, in this particular case, it may not be too easy: we don't actually have the $p_\theta(x_0)$. What we have is a sequence of $p_\theta(x_{t-1}|x_t)$. We could multiply them together to obtain the joint distribution $p_\theta(x_0, \dots, x_T)$:
+At this point we know how to noise our images and how to reverse this process to restore our images. The only question left to answer is how do we train our model to correctly predict $\mu_\theta(x_t, t)$ and $\Sigma_\theta(x_t, t)$. Much like with most other probability-based approaches, we'd like to train our model via minimizing the negative log likelihood $\mathbb{E}[-\log p_\theta(x_0)]$. However, in this particular case, it may not be too easy: we don't actually have the $p_\theta(x_0)$. What we have is a sequence of $p_\theta(x_{t-1} \mid x_t)$. We could multiply them together to obtain the joint distribution $p_\theta(x_0, \dots, x_T)$:
 
-$$ p_\theta(x_0, \dots, x_T) = p(x_T) \prod_{t=1}^T p_\theta(x_{t-1}|x_t) $$
+$$ p_\theta(x_0, \dots, x_T) = p(x_T) \prod_{t=1}^T p_\theta(x_{t-1} \mid x_t) $$
 
 However, we'd still need to take integral of it over all intermediate steps $x_1, \dots, x_T$ in order to get the required $p_\theta(x_0)$:
 
 $$ p_\theta(x_0) = \int p_\theta(x_0, \dots, x_T) dx_1 \dots dx_T $$
 
-Unfortunately for us, this integral is not tractable, however, we can obtain a lower bound. First let's multiply and divide the integral by $q(x_1, \dots, x_T|x_0)$:
+Unfortunately for us, this integral is not tractable, however, we can obtain a lower bound. First let's multiply and divide the integral by $q(x_1, \dots, x_T \mid x_0)$:
 
-$$ p_\theta(x_0) = \int p_\theta(x_0, \dots, x_T) \frac{q(x_1, \dots, x_T|x_0)}{q(x_1, \dots, x_T|x_0)} dx_1 \dots dx_T = $$
+$$ p_\theta(x_0) = \int p_\theta(x_0, \dots, x_T) \frac{q(x_1, \dots, x_T \mid x_0)}{q(x_1, \dots, x_T \mid x_0)} dx_1 \dots dx_T = $$
 
-$$ = \int q(x_1, \dots, x_T|x_0) \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T|x_0)} dx_1 \dots dx_T $$
+$$ = \int q(x_1, \dots, x_T \mid x_0) \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T \mid x_0)} dx_1 \dots dx_T $$
 
 This integral can be viewed as a mathematical expectation:
 
-$$ p_\theta(x_0) = \mathbb{E}_{q(x_1, \dots, x_T|x_0)} \left[ \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T|x_0)} \right] $$
+$$ p_\theta(x_0) = \mathbb{E}_{q(x_1, \dots, x_T \mid x_0)} \left[ \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T \mid x_0)} \right] $$
 
 If we now remember that we want to calculate the logarithm of likelihood, we could easily obtain a lower bound using the Jensen's inequality:
 
-$$ \log p_\theta(x_0) = \log \mathbb{E}_{q(x_1, \dots, x_T|x_0)} \left[ \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T|x_0)} \right] \geq $$
+$$ \log p_\theta(x_0) = \log \mathbb{E}_{q(x_1, \dots, x_T \mid x_0)} \left[ \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T \mid x_0)} \right] \geq $$
 
-$$ \geq \mathbb{E}_{q(x_1, \dots, x_T|x_0)} \left[ \log \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T|x_0)} \right] = $$
+$$ \geq \mathbb{E}_{q(x_1, \dots, x_T \mid x_0)} \left[ \log \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T \mid x_0)} \right] = $$
 
-$$ = \int q(x_1, \dots, x_T|x_0) \log \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T|x_0)} dx_1 \dots dx_T $$
+$$ = \int q(x_1, \dots, x_T \mid x_0) \log \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T \mid x_0)} dx_1 \dots dx_T $$
 
 The last integral is here just as a reminder. After this equation I'll just use the expectation form as it translates the same idea with less text. I'll also shorten the base of expectation to just $q$ for the sake of cleaner formulae.
 
-Now that we have our lower bound, let's try and simplify it. First, let's use the fact that both $p_\theta(x_0, \dots, x_T)$ and $q(x_1, \dots, x_T|x_0)$ are factorisable by our trajectory step:
+Now that we have our lower bound, let's try and simplify it. First, let's use the fact that both $p_\theta(x_0, \dots, x_T)$ and $q(x_1, \dots, x_T \mid x_0)$ are factorisable by our trajectory step:
 
-$$ \log p_\theta(x_0) \geq \mathbb{E}_q \left[ \log \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T|x_0)} \right] = $$
+$$ \log p_\theta(x_0) \geq \mathbb{E}_q \left[ \log \frac{p_\theta(x_0, \dots, x_T)}{q(x_1, \dots, x_T \mid x_0)} \right] = $$
 
-$$ = \mathbb{E}_q \left[ \log \left( p(x_T) \prod_{t=1}^T \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} \right) \right] $$
+$$ = \mathbb{E}_q \left[ \log \left( p(x_T) \prod_{t=1}^T \frac{p_\theta(x_{t-1} \mid x_t)}{q(x_t \mid x_{t-1})} \right) \right] $$
 
 We ended up with a logarithm of product, which equals to sum of logarithms:
 
-$$ \log p_\theta(x_0) \geq \mathbb{E}_q \left[ \log \left( p(x_T) \prod_{t=1}^T \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} \right) \right] = $$
+$$ \log p_\theta(x_0) \geq \mathbb{E}_q \left[ \log \left( p(x_T) \prod_{t=1}^T \frac{p_\theta(x_{t-1} \mid x_t)}{q(x_t \mid x_{t-1})} \right) \right] = $$
 
-$$ = \mathbb{E}_q \left[ \log p(x_T) + \sum_{t=1}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} \right] = $$
+$$ = \mathbb{E}_q \left[ \log p(x_T) + \sum_{t=1}^T \log \frac{p_\theta(x_{t-1} \mid x_t)}{q(x_t \mid x_{t-1})} \right] = $$
 
-$$ = \mathbb{E}_q \left[ \log p(x_T) + \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} + \log \frac{p_\theta(x_0|x_1)}{q(x_1|x_0)} \right] $$
+$$ = \mathbb{E}_q \left[ \log p(x_T) + \sum_{t=2}^T \log \frac{p_\theta(x_{t-1} \mid x_t)}{q(x_t \mid x_{t-1})} + \log \frac{p_\theta(x_0 \mid x_1)}{q(x_1 \mid x_0)} \right] $$
 
-Let's leave the first and last terms as is and focus on the sum in the middle. As we agreed before, our forward trajectory $x_0, \dots, x_T$ is a Markov chain, hence $q(x_t|x_{t-1}) = q(x_t|x_{t-1}, x_0)$.
+Let's leave the first and last terms as is and focus on the sum in the middle. As we agreed before, our forward trajectory $x_0, \dots, x_T$ is a Markov chain, hence $q(x_t \mid x_{t-1}) = q(x_t \mid x_{t-1}, x_0)$.
 
 Also recall the Bayes theorem:
 
-$$ q(x_t|x_{t-1}, x_0) = \frac{q(x_{t-1}|x_t, x_0) q(x_t|x_0)}{q(x_{t-1}|x_0)} $$
+$$ q(x_t \mid x_{t-1}, x_0) = \frac{q(x_{t-1} \mid x_t, x_0) q(x_t \mid x_0)}{q(x_{t-1} \mid x_0)} $$
 
 If we substitute this to our sum, we will get the following:
 
-$$ \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} = \sum_{t=2}^T \log \left( \frac{p_\theta(x_{t-1}|x_t)}{q(x_{t-1}|x_t, x_0)} \cdot \frac{q(x_{t-1}|x_0)}{q(x_t|x_0)} \right) = $$
+$$ \sum_{t=2}^T \log \frac{p_\theta(x_{t-1} \mid x_t)}{q(x_t \mid x_{t-1})} = \sum_{t=2}^T \log \left( \frac{p_\theta(x_{t-1} \mid x_t)}{q(x_{t-1} \mid x_t, x_0)} \cdot \frac{q(x_{t-1} \mid x_0)}{q(x_t \mid x_0)} \right) = $$
 
-$$ = \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_{t-1}|x_t, x_0)} + \sum_{t=2}^T \log \frac{q(x_{t-1}|x_0)}{q(x_t|x_0)} $$
+$$ = \sum_{t=2}^T \log \frac{p_\theta(x_{t-1} \mid x_t)}{q(x_{t-1} \mid x_t, x_0)} + \sum_{t=2}^T \log \frac{q(x_{t-1} \mid x_0)}{q(x_t \mid x_0)} $$
 
 Once again, let's leave the first group of terms as is and look a bit closer at the second sum:
 
-$$ \sum_{t=2}^T \log \frac{q(x_{t-1}|x_0)}{q(x_t|x_0)} = \sum_{t=2}^T (\log q(x_{t-1}|x_0) - \log q(x_t|x_0)) $$
+$$ \sum_{t=2}^T \log \frac{q(x_{t-1} \mid x_0)}{q(x_t \mid x_0)} = \sum_{t=2}^T (\log q(x_{t-1} \mid x_0) - \log q(x_t \mid x_0)) $$
 
 In this sum, each term contains the same component as the previous term, but with opposite sign. Hence, after summation, only two edge components will remain:
 
-$$ \sum_{t=2}^T \log \frac{q(x_{t-1}|x_0)}{q(x_t|x_0)} = \log q(x_1|x_0) - \log q(x_T|x_0) $$
+$$ \sum_{t=2}^T \log \frac{q(x_{t-1} \mid x_0)}{q(x_t \mid x_0)} = \log q(x_1 \mid x_0) - \log q(x_T \mid x_0) $$
 
 After substituting this into the previous formula we get:
 
-$$ \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} = \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_{t-1}|x_t, x_0)} + \log q(x_1|x_0) - \log q(x_T|x_0) $$
+$$ \sum_{t=2}^T \log \frac{p_\theta(x_{t-1} \mid x_t)}{q(x_t \mid x_{t-1})} = \sum_{t=2}^T \log \frac{p_\theta(x_{t-1} \mid x_t)}{q(x_{t-1} \mid x_t, x_0)} + \log q(x_1 \mid x_0) - \log q(x_T \mid x_0) $$
 
-And after substituting this into the log likelihood lower bound and merging $\log q(x_1|x_0)$ with $\log \frac{p_\theta(x_0|x_1)}{q(x_1|x_0)}$ and $\log q(x_T|x_0)$ with $\log p(x_T)$ we obtain:
+And after substituting this into the log likelihood lower bound and merging $\log q(x_1 \mid x_0)$ with $\log \frac{p_\theta(x_0 \mid x_1)}{q(x_1 \mid x_0)}$ and $\log q(x_T \mid x_0)$ with $\log p(x_T)$ we obtain:
 
-$$ \log p_\theta(x_0) \geq \mathbb{E}_q \left[ \log p(x_T) + \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})} + \log \frac{p_\theta(x_0|x_1)}{q(x_1|x_0)} \right] = $$
+$$ \log p_\theta(x_0) \geq \mathbb{E}_q \left[ \log p(x_T) + \sum_{t=2}^T \log \frac{p_\theta(x_{t-1} \mid x_t)}{q(x_t \mid x_{t-1})} + \log \frac{p_\theta(x_0 \mid x_1)}{q(x_1 \mid x_0)} \right] = $$
 
-$$ = \mathbb{E}_q \left[ \log \frac{p(x_T)}{q(x_T|x_0)} + \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_{t-1}|x_t, x_0)} + \log p_\theta(x_0|x_1) \right] $$
+$$ = \mathbb{E}_q \left[ \log \frac{p(x_T)}{q(x_T \mid x_0)} + \sum_{t=2}^T \log \frac{p_\theta(x_{t-1} \mid x_t)}{q(x_{t-1} \mid x_t, x_0)} + \log p_\theta(x_0 \mid x_1) \right] $$
 
-And the last step is to recognise the  [Kullback–Leibler divergencies](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence) in first two terms:
+And the last step is to recognise the [Kullback–Leibler divergencies](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence) in first two terms:
 
-$$ \log p_\theta(x_0) \geq \mathbb{E}_q \left[ \log \frac{p(x_T)}{q(x_T|x_0)} + \sum_{t=2}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_{t-1}|x_t, x_0)} + \log p_\theta(x_0|x_1) \right] = $$
+$$ \log p_\theta(x_0) \geq \mathbb{E}_q \left[ \log \frac{p(x_T)}{q(x_T \mid x_0)} + \sum_{t=2}^T \log \frac{p_\theta(x_{t-1} \mid x_t)}{q(x_{t-1} \mid x_t, x_0)} + \log p_\theta(x_0 \mid x_1) \right] = $$
 
-$$ = - D_{KL} (q(x_T|x_0)\ \|\ p(x_T)) - \sum_{t=2}^T D_{KL} (q(x_{t-1}|x_t, x_0)\ \|\ p_\theta(x_{t-1}|x_t)) + \log p_\theta(x_0|x_1) $$
+$$ = - D_{KL} (q(x_T \mid x_0) \mid p(x_T)) - \sum_{t=2}^T D_{KL} (q(x_{t-1} \mid x_t, x_0) \mid p_\theta(x_{t-1} \mid x_t)) + \log p_\theta(x_0 \mid x_1) $$
 
 Now recall that instead of maximizing the log likelihood, we often talk about minimizing the negative log likelihood, meaning that our objective will have to be negated. Also the formula above gives the log likelihood for one object $x_0$. What we want to minimize is the $\mathbb{E}[-\log p_\theta(x_0)]$, where the expectation is taken over the $x_0 \sim q(x_0)$. In real life we often don't know the $q(x_0)$. However, we have a sample of objects from $q(x_0)$ (i.e. our dataset) and hence we can approximate the expectation using the Monte Carlo method.
 
@@ -152,13 +152,13 @@ As such we obtain the $L_\text{vlb}$ loss ($\text{vlb}$ stands for *variational 
 
 $$ \mathbb{E}[-\log p_\theta(x_0)] \leq L_{\text{vlb}} = L_0 + \sum_{t=1}^T L_t $$
 
-$$ L_0 = -\log p_\theta(x_0|x_1) $$
+$$ L_0 = -\log p_\theta(x_0 \mid x_1) $$
 
-$$ L_{t-1} = D_{KL} (q(x_{t-1}|x_t, x_0)\ \|\ p_\theta(x_{t-1}|x_t)) $$
+$$ L_{t-1} = D_{KL} (q(x_{t-1} \mid x_t, x_0) \mid p_\theta(x_{t-1} \mid x_t)) $$
 
-$$ L_T = D_{KL} (q(x_T|x_0)\ \|\ p(x_T)) $$
+$$ L_T = D_{KL} (q(x_T \mid x_0) \mid p(x_T)) $$
 
-Note that it is easy to get intuition on what each term does. The $L_0$ forces our model to give as much probability as possible to the target picture at the end of the chain. Each of the $L_{t-1}$ forces the inverse process to follow the predefined route. Finally, the $L_T$ doesn't depend on our trainable parameters $\theta$ and stands there to remind us that there is an unavoidable error caused by the fact that $q(x_T|x_0)$, although very close to $p(x_T)$ (standard normal distribution), never matches it exactly.
+Note that it is easy to get intuition on what each term does. The $L_0$ forces our model to give as much probability as possible to the target picture at the end of the chain. Each of the $L_{t-1}$ forces the inverse process to follow the predefined route. Finally, the $L_T$ doesn't depend on our trainable parameters $\theta$ and stands there to remind us that there is an unavoidable error caused by the fact that $q(x_T \mid x_0)$, although very close to $p(x_T)$ (standard normal distribution), never matches it exactly.
 
 Another important thing to note is the fact that despite we see multiple Kullback–Leibler divergencies, we don't need to take any integrals during training. All terms $L_t$ contain KL divergencies between two normal distributions, which means that each KL divergence becomes simply the MSE loss between distributions' expectations, normed on their variances, plus a distance between their variances.
 
