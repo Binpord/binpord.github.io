@@ -6,17 +6,18 @@
   <link rel="canonical" href="https://binpord.com/">
   <script>
     // Map old Jekyll post URLs to new Hugo URLs
-    var defined_names = [
+    var defined_names = [ // extracts from post filenames
       "git", "linear_layer_backprop", "softmax_backprop",
       "normalizing_flows", "positional_encoding", "diffusion_models",
       "ai_coding_benchmarks"
     ];
-    var defined_dates = [
+    var defined_dates = [ // corresponding dates
       "2021-08-13", "2021-09-21", "2021-09-26",
       "2021-11-10", "2022-02-03", "2022-03-17",
       "2026-01-17"
     ];
     var path = window.location.pathname;
+    // Old Jekyll URLs: /YYYY/MM/DD/slug.html
     var match = path.match(/^\/(\d{4})\/(\d{2})\/(\d{2})\/(.+?)(?:\.html)?$/);
     if (match) {
       var slug = match[4];
